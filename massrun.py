@@ -35,7 +35,7 @@ TRAIN_DIR = ['./ISIC_2024_Training_Input/', "C:\\Users\\rngki\\Downloads\\train_
 #TEST_DIR = 'C:\\Users\\rngki\\Downloads\\test_images_hair_removed_dullrazor\\'
 #TEST_CSV = 'C:\\Users\\rngki\\Downloads\\test_dataset_with_skin_tone.csv'
 
-MODELS = ["efficientnet", "resnet50", "coatnet", "resnet34"]
+MODELS = ["deit","efficientnet", "resnet50", "coatnet", "resnet34"]
 
 DATA_NAMES = ['ISIC_2024_Training_Input', 'train_images_hair_removed_dullrazor']
 TEST_DIR = ['./ISIC_2024_Training_Input/', "./ISIC_2024_Training_Input/"]
