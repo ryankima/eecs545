@@ -102,16 +102,19 @@ def pAUC(input: pd.DataFrame, min_tpr: float=0.80) -> float:
 #     # Save plot
 #     plt.savefig(f"{label}_skin_tones.png", dpi=300)
 
-models = ["coatnet", "efficientnet", "resnet34", "resnet50"]
+models = ["coatnet", "efficientnet", "resnet34", "resnet50", "deit"]
 for model in models:
     print(model.upper())
     input = pd.read_csv(f'baseline/scores_{model}_ISIC_2024_Training_Input.csv')
     # input = pd.read_csv(f'dullrazor/scores_{model}_train_images_hair_removed_dullrazor.csv')
+    # input_supp = pd.read_csv('../og_test_dataset_with_labeled_cancer_and_skin_tone.csv')[['isic_id', 'skin_tone']]
+    input_supp = pd.read_csv('../ISIC_2024_Training_Supplement.csv')[['isic_id', 'iddx_full']]
     malignant = filter_rows_by_target(input, 'target', lambda x: x == 1.0)
     false_neg = filter_rows_by_target(malignant, 'prediction', lambda x: x < 0.5)
     true_pos = filter_rows_by_target(malignant, 'prediction', lambda x: x > 0.5)
 
     ### cancer type ###
+    cancer_types = ["adnexal epithelial proliferations", "epidermal proliferations", "melanocytic proliferations"]
     # input_supp = pd.read_csv('../ISIC_2024_Training_Supplement.csv')
     # columns = ['iddx_full']
     # false_neg = join_csv(false_neg, input_supp, 'isic_id')[columns]
@@ -120,8 +123,7 @@ for model in models:
     # true_pos.to_csv('true_pos.csv', index=False)
 
     ### skin tone ###
-    skin_tones = ['#6F503C', '#81654F', '#9D7A54', '#BEA07E', '#E5C8A6', '#E7C1B8']
-    input_supp = pd.read_csv('../test_dataset_with_skin_tone.csv')[['isic_id', 'skin_tone']]
+    skin_tones = ['#513B2E', '#6F503C', '#81654F', '#9D7A54', '#BEA07E', '#E5C8A6', '#E7C1B8']
     # columns = ['skin_tone']
     # false_neg = join_csv(false_neg, input_supp, 'isic_id')
     # true_pos = join_csv(true_pos, input_supp, 'isic_id')
@@ -146,12 +148,18 @@ for model in models:
     #     print(f"True positive ({skin_tone}):\n", tpos.describe())
 
     merged = join_csv(input, input_supp, 'isic_id')
-    for skin_tone in skin_tones:
-        df = filter_rows_by_target(merged, 'skin_tone', lambda x: x == skin_tone)
-        # print(f"{skin_tone}: {pAUC(filtered_input)}")
-        # print(f"{skin_tone}: {roc_auc_score(filtered_input["target"], filtered_input["prediction"])}")
+    # for skin_tone in skin_tones:
+    #     df = filter_rows_by_target(merged, 'skin_tone', lambda x: x == skin_tone)
+    for type in cancer_types:
+        df = filter_rows_by_target(merged, 'iddx_full', lambda x: x.str.contains(type, case=False, na=False))
         predictions = (df["prediction"] >= 0.5).astype(int)
-        # print(f"{skin_tone}: {accuracy_score(df["target"], predictions)}")
-        # print(f"{skin_tone}: {f1_score(df["target"], predictions)}")
-        print(f"{skin_tone}: {balanced_accuracy_score(df["target"], predictions)}")
+        # print('\t', skin_tone)
+        # if skin_tone != "#513B2E":
+        print('\t', type)
+        if type != 'adnexal epithelial proliferations':
+            print(f"\t\tpAUC: {pAUC(df)}")
+            print(f"\t\tAUC: {roc_auc_score(df["target"], df["prediction"])}")
+        print(f"\t\taccuracy: {accuracy_score(df["target"], predictions)}")
+        print(f"\t\tbalanced accuracy: {balanced_accuracy_score(df["target"], predictions)}")
+        print(f"\t\tf1_score: {f1_score(df["target"], predictions)}")
         
